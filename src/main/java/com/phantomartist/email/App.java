@@ -1,55 +1,55 @@
 package com.phantomartist.email;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
 
-import com.azure.identity.ClientSecretCredential;
-import com.azure.identity.ClientSecretCredentialBuilder;
-import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
-import com.microsoft.graph.models.Attachment;
-import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.requests.MessageCollectionPage;
+import com.phantomartist.email.authentication.AccessProvider;
+import com.phantomartist.email.authentication.AuthenticationBuilder;
+import com.phantomartist.email.handler.FileHandler;
+import com.phantomartist.email.handler.MessageHandler;
+import com.phantomartist.email.handler.impl.FileHandlerImpl;
+import com.phantomartist.email.handler.impl.MessageHandlerImpl;
 
-import okhttp3.Request;
-
+/**
+ * Wrapper class for running the application.
+ */
 public class App {
-
-    private static final String CLIENT_ID = "";
-    private static final String CLIENT_SECRET = "";
-    private static final String TENANT = "";
 
     public static void main(String[] args) {
 
+        if (args.length < 3) {
+            throw new RuntimeException(
+                "Program requires args <tenantId> <applicationId> <applicationSecret> (optional) <download folder>");
+        }
 
-        final ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
-                .clientId(CLIENT_ID)
-                .clientSecret(CLIENT_SECRET)
-                .tenantId(TENANT)
-                .build();
+        // Very simplistic way of passing sensitive info via program params.
+        // There are probably other (better) ways of injecting these.
+        final String tenantId = args[0];
+        final String applicationId = args[1];
+        final String applicationSecret = args[2];
 
-        final TokenCredentialAuthProvider tokenCredentialAuthProvider = 
-                new TokenCredentialAuthProvider(
-                        Arrays.asList("Mail.Read"), 
-                        clientSecretCredential);
+        Objects.requireNonNull(tenantId, "tenantId cannot be null");
+        Objects.requireNonNull(applicationId, "applicationId cannot be null");
+        Objects.requireNonNull(applicationSecret, "applicationSecret cannot be null");
 
-        final GraphServiceClient<Request> graphClient =
-          GraphServiceClient
-            .builder()
-            .authenticationProvider(tokenCredentialAuthProvider)
-            .buildClient();
+        // The directory to download attachments to (defaults to tmp.dir)
+        final String attachmentsDownloadPath = 
+            args[3] == null ? 
+                System.getProperty("java.io.tmpdir") : 
+                args[3];
+        
+        final AccessProvider accessProvider = 
+            AuthenticationBuilder.createAccessProvider(
+                tenantId, applicationId, applicationSecret);
 
-        final MessageCollectionPage messages = graphClient.me().mailFolders("{id}").messages()
-                .buildRequest()
-                .get();
+        final MessageHandler messageHandler = new MessageHandlerImpl(accessProvider);
+        final FileHandler fileHandler = new FileHandlerImpl();
 
-        messages.getCurrentPage().forEach(msg -> {
-            final List<Attachment> attachments = msg.attachments.getCurrentPage();
-            attachments.forEach(attachment -> {
-                if ("application/zip".contentEquals(attachment.contentType)) {
-                    // TODO: Do something
-                }
-            });
-        });
+        final EmailProcessor emailProcessor = 
+            new EmailProcessor(
+                attachmentsDownloadPath, 
+                messageHandler,
+                fileHandler);
+        emailProcessor.run();
+        
     }
 }
