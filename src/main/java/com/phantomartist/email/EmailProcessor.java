@@ -10,6 +10,9 @@ import com.phantomartist.email.handler.MessageHandler;
 import com.phantomartist.email.wrapper.Attachment;
 import com.phantomartist.email.wrapper.Message;
 
+/**
+ * Main business logic processing class.
+ */
 public class EmailProcessor {
 
     private String attachmentDownloadDirectory;
@@ -27,7 +30,10 @@ public class EmailProcessor {
     }
 
     /**
-     * Get unread messages
+     * Get unread messages.
+     * Process them for attachments.
+     * Save attachments to files on local disk.
+     * Mark messages as "read".
      */
     public void run() {
 
@@ -35,24 +41,32 @@ public class EmailProcessor {
 
         final List<Message> unreads = messageHandler.getUnread();
         for (Message unread : unreads) {
+
             // If no attachments, go to next message
             if (!unread.hasAttachments()) {
                 processed.add(unread);
                 continue;
             }
 
+            // Get attachment properties of message (may be multiple attachments)
             final List<Attachment> attachments = unread.getAttachments();
             for (Attachment attachment : attachments) {
 
+                // Process the file bytes of the attachment
                 try {
                     final byte[] bytes = attachment.getAttachmentBytes();
                     if (bytes != null) {
+
+                        // Get an appropriate filename on disk for download
                         final Path localFile = 
-                            fileHandler.getAvailablePath(attachmentDownloadDirectory, 
-                            attachment.getFilename());
-    
+                            fileHandler.getAvailablePath(
+                                attachmentDownloadDirectory, 
+                                attachment.getFilename());
+
+                        // Write the file bytes
                         fileHandler.writeToFile(localFile, bytes);
-                        Logger.logInfo("Wrote file " + localFile.toFile().getAbsolutePath());
+                        Logger.logInfo("Wrote file " + 
+                            localFile.toFile().getAbsolutePath());
                     }
                     processed.add(unread);
 
@@ -63,6 +77,7 @@ public class EmailProcessor {
             }
         }
 
+        // Mark the processed messages as read
         messageHandler.markAsRead(processed);
     }
 }
