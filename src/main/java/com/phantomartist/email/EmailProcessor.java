@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.phantomartist.email.handler.FileHandler;
 import com.phantomartist.email.handler.MessageHandler;
+import com.phantomartist.email.util.ByteUtil;
 import com.phantomartist.email.wrapper.Attachment;
 import com.phantomartist.email.wrapper.Message;
 
@@ -54,7 +55,9 @@ public class EmailProcessor {
 
                 // Process the file bytes of the attachment
                 try {
-                    final byte[] bytes = attachment.getAttachmentBytes();
+                    final byte[] bytes = 
+                        ByteUtil.decodeBase64Bytes(attachment.getAttachmentBytes());
+
                     if (bytes != null) {
 
                         // Get an appropriate filename on disk for download
@@ -65,6 +68,7 @@ public class EmailProcessor {
 
                         // Write the file bytes
                         fileHandler.writeToFile(localFile, bytes);
+
                         Logger.logInfo("Wrote file " + 
                             localFile.toFile().getAbsolutePath());
                     }

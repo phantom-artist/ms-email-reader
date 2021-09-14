@@ -48,6 +48,8 @@ public class AttachmentImpl implements Attachment {
     /**
      * Get the attachment as a FileAttachment object to get at the raw bytes.
      * 
+     * @return byte[] the Base64 encoded bytes of the attachment
+     * 
      * @throws IOException if attachment cannot be processed
      */
     @Override
