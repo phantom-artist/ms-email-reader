@@ -1,6 +1,9 @@
 package com.phantomartist.email.authentication.impl;
 
+import java.net.URL;
+
 import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
+import com.microsoft.graph.core.BaseClient;
 import com.microsoft.graph.requests.GraphServiceClient;
 import com.phantomartist.email.authentication.AccessProvider;
 
@@ -26,7 +29,11 @@ public class AccessProviderImpl implements AccessProvider {
 
     @Override
     public String getAccessToken() {
-        //TODO Implement me correctly
-        return null;
+        try {
+            final URL meUrl = new URL(BaseClient.DEFAULT_GRAPH_ENDPOINT + "/me");
+            return tokenCredentialAuthProvider.getAuthorizationTokenAsync(meUrl).get();
+        } catch(Exception ex) {
+            return null;
+        }
     }
 }

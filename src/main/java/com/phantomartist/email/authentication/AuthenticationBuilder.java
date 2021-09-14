@@ -31,7 +31,6 @@ public class AuthenticationBuilder {
                   .authenticationProvider(tokenCredentialAuthProvider)
                   .buildClient();
 
-
         return new AccessProviderImpl(graphClient, tokenCredentialAuthProvider);
     }
 

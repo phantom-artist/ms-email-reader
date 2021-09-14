@@ -1,8 +1,12 @@
 package com.phantomartist.email.wrapper.impl;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+
+import org.apache.http.HttpException;
 
 import com.microsoft.graph.core.BaseClient;
+import com.phantomartist.email.Logger;
 import com.phantomartist.email.authentication.AccessProvider;
 import com.phantomartist.email.wrapper.Attachment;
 
@@ -10,6 +14,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * Attachment implementation
+ *
+ */
 public class AttachmentImpl implements Attachment {
 
     private AccessProvider accessProvider;
@@ -76,7 +84,14 @@ public class AttachmentImpl implements Attachment {
 
         final OkHttpClient client = new OkHttpClient();
         try (Response response = client.newCall(request).execute()) {
-            attachmentBytes = response.body().bytes();
+            if (response.code() == HttpURLConnection.HTTP_OK) {
+                attachmentBytes = response.body().bytes();
+            } else {
+                Logger.logError("getAttachmentBytes() failed - HTTP Response " + 
+                    response.code() + ": Detail " + response.message(), 
+                    new HttpException());
+                attachmentBytes = null;
+            }
         }
         return attachmentBytes;
     }

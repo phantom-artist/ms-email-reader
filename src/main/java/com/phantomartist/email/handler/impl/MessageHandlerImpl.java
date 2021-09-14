@@ -29,6 +29,7 @@ public class MessageHandlerImpl implements MessageHandler {
             .me()
             .messages()
             .buildRequest()
+            .filter("isRead eq false")
             .get();
         List<com.microsoft.graph.models.Message> messages = 
             page.getCurrentPage();
@@ -40,7 +41,7 @@ public class MessageHandlerImpl implements MessageHandler {
                     unread.add(new MessageImpl(accessProvider, message));
                 }
             }
-            Logger.logInfo("Processed page " + pageCount);
+            Logger.logInfo("Processed unread page " + pageCount);
             messages = page.getNextPage().buildRequest().get().getCurrentPage();
             pageCount++;
         }
