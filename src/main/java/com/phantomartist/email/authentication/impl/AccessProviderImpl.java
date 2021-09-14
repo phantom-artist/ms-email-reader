@@ -5,6 +5,7 @@ import java.net.URL;
 import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
 import com.microsoft.graph.core.BaseClient;
 import com.microsoft.graph.requests.GraphServiceClient;
+import com.phantomartist.email.Logger;
 import com.phantomartist.email.authentication.AccessProvider;
 
 import okhttp3.Request;
@@ -32,7 +33,8 @@ public class AccessProviderImpl implements AccessProvider {
         try {
             final URL meUrl = new URL(BaseClient.DEFAULT_GRAPH_ENDPOINT + "/me");
             return tokenCredentialAuthProvider.getAuthorizationTokenAsync(meUrl).get();
-        } catch(Exception ex) {
+        } catch (Exception e) {
+            Logger.logError("Unable to get authorization access token", e);
             return null;
         }
     }
