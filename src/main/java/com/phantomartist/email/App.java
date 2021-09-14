@@ -1,5 +1,6 @@
 package com.phantomartist.email;
 
+import java.time.Instant;
 import java.util.Objects;
 
 import com.phantomartist.email.authentication.AccessProvider;
@@ -49,7 +50,10 @@ public class App {
                 attachmentsDownloadPath, 
                 messageHandler,
                 fileHandler);
+
+        Logger.logInfo("Started processing at " + Instant.now());
         emailProcessor.run();
+        Logger.logInfo("Finished processing at " + Instant.now());
         
     }
 }
