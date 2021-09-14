@@ -1,18 +1,12 @@
 package com.phantomartist.email.wrapper.impl;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
-import org.apache.http.HttpException;
-
-import com.microsoft.graph.core.BaseClient;
+import com.microsoft.graph.models.FileAttachment;
+import com.microsoft.graph.requests.FileAttachmentRequestBuilder;
 import com.phantomartist.email.Logger;
 import com.phantomartist.email.authentication.AccessProvider;
 import com.phantomartist.email.wrapper.Attachment;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * Attachment implementation
@@ -52,10 +46,7 @@ public class AttachmentImpl implements Attachment {
     }
 
     /**
-     * Example URL for getting attachment bytes
-     * https://docs.microsoft.com/en-us/graph/api/attachment-get?view=graph-rest-1.0&tabs=java
-     * 
-     * GET https://graph.microsoft.com/v1.0/me/messages/AAMkADA1M-zAAA=/attachments/AAMkADA1M-CJKtzmnlcqVgqI=/$value
+     * Get the attachment as a FileAttachment object to get at the raw bytes.
      * 
      * @throws IOException if attachment cannot be processed
      */
@@ -67,32 +58,35 @@ public class AttachmentImpl implements Attachment {
             return attachmentBytes;
         }
 
-        // Get the access token required for manual API call
-        final String accessToken = accessProvider.getAccessToken();
+        if ("#microsoft.graph.fileAttachment".equals(msAttachment.oDataType)) {
 
-        // See https://docs.microsoft.com/en-us/graph/auth-v2-user
-        final Request request = new Request.Builder().url(
-            BaseClient.DEFAULT_GRAPH_ENDPOINT +
-            "/me/messages/" +
-            messageId +
-            "/attachments/" +
-            msAttachment.id +
-            "/$value") // $value accesses the raw bytes
-            .addHeader("Authorization", "Bearer " + accessToken) // Authorization header
-            .addHeader("Host", "graph.microsoft.com")
-            .build();
+            final String attachmentRequestURL =
+                accessProvider.getServiceClient()
+                .me()
+                .messages(messageId)
+                .attachments(msAttachment.id)
+                .buildRequest()
+                .getRequestUrl()
+                .toString();
 
-        final OkHttpClient client = new OkHttpClient();
-        try (Response response = client.newCall(request).execute()) {
-            if (response.code() == HttpURLConnection.HTTP_OK) {
-                attachmentBytes = response.body().bytes();
-            } else {
-                Logger.logError("getAttachmentBytes() failed - HTTP Response " + 
-                    response.code() + ": Detail " + response.message(), 
-                    new HttpException());
-                attachmentBytes = null;
+            final FileAttachmentRequestBuilder fileRequestBuilder =
+                new FileAttachmentRequestBuilder(
+                    attachmentRequestURL, 
+                    accessProvider.getServiceClient(),
+                    null);
+
+            final FileAttachment fileAttachment = 
+                fileRequestBuilder.buildRequest().get();
+
+            if (fileAttachment != null) {
+                attachmentBytes = fileAttachment.contentBytes;
+            }
+            if (attachmentBytes == null) {
+                Logger.logError("getAttachmentBytes() failed - null byte array", 
+                    new Exception("Attachment file bytes is null"));
             }
         }
+
         return attachmentBytes;
     }
 }
