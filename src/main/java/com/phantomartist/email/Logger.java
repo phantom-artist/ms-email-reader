@@ -15,6 +15,12 @@ public class Logger {
 
     public static void logError(final String message, final Exception e) {
         System.err.println(message);
-        e.printStackTrace();
+        if (e != null) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void logError(final String message) {
+        logError(message, null);
     }
 }

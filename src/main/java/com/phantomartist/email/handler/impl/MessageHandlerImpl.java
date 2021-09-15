@@ -51,8 +51,26 @@ public class MessageHandlerImpl implements MessageHandler {
 
     @Override
     public void markAsRead(final List<Message> messages) {
-        // TODO Auto-generated method stub
-        
+
+        com.microsoft.graph.models.Message msg = 
+                new com.microsoft.graph.models.Message();
+        msg.isRead = true;
+
+        for (Message message : messages) {
+            com.microsoft.graph.models.Message response = 
+                accessProvider
+                .getServiceClient()
+                .me()
+                .messages(message.getId())
+                .buildRequest()
+                .select("IsRead")
+                .patch(msg);
+
+            if (!response.isRead) {
+                Logger.logError("Unable to successfully mark message " + 
+                    message.getId() + " as 'read'");
+            }
+        }
     }
 
 }
