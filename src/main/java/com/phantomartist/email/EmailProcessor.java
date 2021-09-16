@@ -51,7 +51,7 @@ public class EmailProcessor {
 
             // Get attachment properties of message (may be multiple attachments)
             final List<Attachment> attachments = unread.getAttachments();
-            for (Attachment attachment : attachments) {
+            attachments.forEach(attachment -> {
 
                 // Process the file bytes of the attachment
                 try {
@@ -78,7 +78,7 @@ public class EmailProcessor {
                     Logger.logError("Failed to process attachment " + 
                         attachment.getFilename(), ioe);
                 }
-            }
+            });
         }
 
         // Mark the processed messages as read

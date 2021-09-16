@@ -56,7 +56,7 @@ public class MessageHandlerImpl implements MessageHandler {
                 new com.microsoft.graph.models.Message();
         msg.isRead = true;
 
-        for (Message message : messages) {
+        messages.forEach(message -> {
             com.microsoft.graph.models.Message response = 
                 accessProvider
                 .getServiceClient()
@@ -70,7 +70,7 @@ public class MessageHandlerImpl implements MessageHandler {
                 Logger.logError("Unable to successfully mark message " + 
                     message.getId() + " as 'read'");
             }
-        }
+        });
     }
 
 }
