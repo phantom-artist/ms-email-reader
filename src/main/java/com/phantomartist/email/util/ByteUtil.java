@@ -1,8 +1,6 @@
 package com.phantomartist.email.util;
 
-import com.phantomartist.email.Logger;
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import java.util.Base64;
 
 public class ByteUtil {
 
@@ -18,13 +16,7 @@ public class ByteUtil {
             return null;
         }
 
-        byte[] decodedBytes = null;
-        try {
-            decodedBytes = Base64.decode(base64Encoded);
-        } catch (Base64DecodingException e) {
-            Logger.logError("Error decoding attachment bytes", e);
-        }
-        return decodedBytes;
+        return Base64.getDecoder().decode(base64Encoded);
     }
 
     private ByteUtil() {
